@@ -1,0 +1,5 @@
+#!/bin/bash
+dec_water=$((5#$WATER))
+dec_stir=$((6#$STIR))
+sum=$((dec_water + dec_stir))
+echo "obase=13; $sum" | bc
