@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Script that configures nginx server with redirection
+
+# Update package list
+apt-get update -y
+
+# Install nginx
+apt-get install nginx -y
+
+# Create a simple index.html with "Hello World!" content
+echo "Hello World!" > /var/www/html/index.html
+
+# Configure nginx with redirection
+# Add redirection rule to nginx default configuration
+sed -i '/server_name _;/a\\n\tlocation /redirect_me {\n\t\treturn 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;\n\t}' /etc/nginx/sites-available/default
+
+# Restart nginx service
+service nginx restart

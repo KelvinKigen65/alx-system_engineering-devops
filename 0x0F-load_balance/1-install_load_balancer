@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# Script that installs and configures HAproxy load balancer
+
+# Update package list
+apt-get update -y
+
+# Install HAproxy
+apt-get install haproxy -y
+
+# Enable HAproxy to be managed via init script
+systemctl enable haproxy
+
+# Backup original configuration
+cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak
+
+# Create HAproxy configuration
+cat > /etc/haproxy/haproxy.cfg << 'EOF'
+global
+    daemon
+    maxconn 256
+
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+    option httplog
+    option dontlognull
+    retries 3
+    option redispatch
+
+frontend http_front
+    bind *:80
+    stats uri /haproxy?stats
+    default_backend http_back
+
+backend http_back
+    balance roundrobin
+    option httpchk GET /
+    option forwardfor
+    server web-01 [WEB-01-IP]:80 check
+    server web-02 [WEB-02-IP]:80 check
+EOF
+
+# You need to replace these IP addresses with your actual web server IPs
+# These can be found in your server dashboard or by running 'curl ifconfig.me' on each server
+WEB01_IP="web-01-ip-address"  # Replace with actual web-01 IP
+WEB02_IP="web-02-ip-address"  # Replace with actual web-02 IP
+
+# Create HAproxy configuration with load balancing
+cat > /etc/haproxy/haproxy.cfg << EOF
+global
+    daemon
+    maxconn 256
+
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+    option httplog
+    option dontlognull
+    retries 3
+    option redispatch
+
+frontend http_front
+    bind *:80
+    stats uri /haproxy?stats
+    default_backend http_back
+
+backend http_back
+    balance roundrobin
+    option httpchk GET /
+    option forwardfor
+    server web-01 ${WEB01_IP}:80 check
+    server web-02 ${WEB02_IP}:80 check
+EOF
+
+# Test HAproxy configuration
+haproxy -f /etc/haproxy/haproxy.cfg -c
+
+# Start HAproxy service
+service haproxy start
+
+# Restart HAproxy to apply new configuration
+service haproxy restart
+
+# Enable HAproxy to start on boot
+update-rc.d haproxy enable

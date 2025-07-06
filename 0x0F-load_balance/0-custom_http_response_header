@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Script that configures Nginx to add custom HTTP response header
+# shellcheck disable=SC2154
+
+# Update package list
+apt-get update -y
+
+# Install nginx if not already installed
+apt-get install nginx -y
+
+# Create a simple index.html with "Hello World!" content
+echo "Hello World!" > /var/www/html/index.html
+
+# Get the hostname of the server
+hostname=$(hostname)
+
+# Configure nginx with custom header
+# Add the custom header to the server block
+sed -i "/server_name _;/a\\
+\\
+\tadd_header X-Served-By \$hostname;" /etc/nginx/sites-available/default
+
+# Alternative method using a more specific approach
+# Create a backup of the original configuration
+cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
+
+# Create new configuration with custom header
+cat > /etc/nginx/sites-available/default << EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name _;
+
+    # Add custom header with hostname
+    add_header X-Served-By \$hostname;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }
+}
+EOF
+
+# Test nginx configuration
+nginx -t
+
+# Restart nginx service
+service nginx restart
+
+# Enable nginx to start on boot
+update-rc.d nginx enable
