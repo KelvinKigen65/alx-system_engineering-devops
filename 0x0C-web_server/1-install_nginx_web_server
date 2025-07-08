@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# Script that installs nginx web server and configures it
+#Script to transfer a file from the client to a server
 
-# Update package list
-apt-get update -y
+if [ $# -lt 4 ]; then
+  echo "Usage: $0 PATH_TO_FILE IP USERNAME PATH_TO_SSH_KEY"
+  exit 1
+fi
 
-# Install nginx
-apt-get install nginx -y
+file_path=$1
+server_ip=$2
+username=$3
+ssh_key=$4
 
-# Create a simple index.html with "Hello World!" content
-echo "Hello World!" > /var/www/html/index.html
+# Transfer the file using scp
+scp -o StrictHostKeyChecking=no -i "$ssh_key" "$file_path" "$username@$server_ip:~/"
 
-# Start nginx service
-service nginx start
-
-# Enable nginx to start on boot
-update-rc.d nginx enable
+exit 0
+;

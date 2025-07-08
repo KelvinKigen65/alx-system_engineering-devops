@@ -1,6 +1,9 @@
-# Install UFW firewall
+#!/usr/bin/env bash
+# UFW firewall configuration to block all incoming traffic except specific ports
+
+# Install UFW if not already installed
 sudo apt-get update
-sudo apt-get install ufw
+sudo apt-get install -y ufw
 
 # Reset UFW to default settings
 sudo ufw --force reset
@@ -9,17 +12,17 @@ sudo ufw --force reset
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 
-# Allow SSH (port 22)
-sudo ufw allow 22
+# Allow SSH (port 22) - IMPORTANT: Do this first to avoid being locked out
+sudo ufw allow 22/tcp
 
 # Allow HTTP (port 80)
-sudo ufw allow 80
+sudo ufw allow 80/tcp
 
-# Allow HTTPS SSL (port 443)
-sudo ufw allow 443
+# Allow HTTPS (port 443)
+sudo ufw allow 443/tcp
 
-# Enable UFW firewall
+# Enable UFW
 sudo ufw --force enable
 
-# Check UFW status
-sudo ufw status
+# Show UFW status
+sudo ufw status verbose
