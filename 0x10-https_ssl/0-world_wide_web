@@ -1,41 +1,17 @@
 #!/usr/bin/env bash
-# Bash script to audit subdomains and display DNS information
+# Displays DNS record info for subdomains of a domain
 
-# Function to get subdomain information
-get_subdomain_info() {
-    local domain=$1
-    local subdomain=$2
-    
-    # Use dig to get DNS information and parse with awk
-    local result=$(dig "$subdomain.$domain" | grep -A1 'ANSWER SECTION:' | tail -n1)
-    
-    if [[ -n "$result" ]]; then
-        # Extract record type and destination using awk
-        local record_type=$(echo "$result" | awk '{print $4}')
-        local destination=$(echo "$result" | awk '{print $5}')
-        
-        echo "The subdomain $subdomain is a $record_type record and points to $destination"
-    fi
+# Function to fetch and print record info
+print_domain_subdomain(){
+    dig "$1" | grep -A1 'ANSWER SECTION' | sed -r "s/$1./$2/g" | awk -f"" ' NR==2 { print "The subdomain" $1 "is a "record and points to "$5}'
 }
 
-# Main script logic
-domain=$1
-subdomain=$2
-
-# Check if domain parameter is provided
-if [[ -z "$domain" ]]; then
-    echo "Usage: $0 <domain> [subdomain]"
-    exit 1
-fi
-
-# If subdomain is specified, show info for that subdomain only
-if [[ -n "$subdomain" ]]; then
-    get_subdomain_info "$domain" "$subdomain"
+if [ "$#" -eq 2]
+then
+    print_domain_subdomain "$2.$1" "$2"
 else
-    # If no subdomain specified, show info for default subdomains in order
-    subdomains=("www" "lb-01" "web-01" "web-02")
-    
-    for sub in "${subdomains[@]}"; do
-        get_subdomain_info "$domain" "$sub"
-    done
+    print_domain_subdomain "www.$1" "www"
+    print_domain_subdomain "lb-01.$1 "www"
+    print_domain_subdomain "web-01.$1 "www"
+    print_domain_subdomain "web-02.$1" "www"
 fi
