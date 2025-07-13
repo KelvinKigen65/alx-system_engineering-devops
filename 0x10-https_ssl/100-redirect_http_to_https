@@ -16,10 +16,10 @@ defaults
 frontend www-http
     bind *:80
     reqadd X-Forwarded-Proto:\ http
-    default_backend www-backend
+    redirect scheme https code 301 if !{ ssl_fc }
 
 frontend www-https
-    bind *:443 ssl crt /etc/letsencrypt/live/www.yourdomain.com/fullchain.pem
+    bind *:443 ssl crt /etc/letsencrypt/live/www.yourdomain.com/yourdomain.com.pem
     reqadd X-Forwarded-Proto:\ https
     acl letsencrypt-acl path_beg /.well-known/acme-challenge/
     use_backend letsencrypt-backend if letsencrypt-acl
@@ -28,8 +28,8 @@ frontend www-https
 backend www-backend
     balance roundrobin
     option httpchk GET /
-    server web-01 [web-01-IP]:80 check
-    server web-02 [web-02-IP]:80 check
+    server web-01 [WEB-01-IP]:80 check
+    server web-02 [WEB-02-IP]:80 check
 
 backend letsencrypt-backend
     server letsencrypt 127.0.0.1:54321
